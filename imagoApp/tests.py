@@ -10,7 +10,7 @@ class SearchImagoDataTests(APITestCase):
         mock_search = MagicMock()
         mock_search.execute.return_value = [
             MagicMock(to_dict=lambda: {
-                "bildnummer": "93882934",
+                "bildnummer": "0093882934",
                 "datum": "2018-01-01T00:00:00.000Z",
                 "suchtext": "Happiness girl in jump,model released, Symbolfoto ING_19071_09621",
                 "fotografen": "ingimage",
@@ -28,7 +28,7 @@ class SearchImagoDataTests(APITestCase):
         # Assert the response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['bildnummer'], "93882934")
+        self.assertEqual(response.data[0]['bildnummer'], "0093882934")
         self.assertEqual(response.data[0]['fotografen'], "ingimage")
 
     @patch('imagoApp.views.get_es_client')
@@ -38,7 +38,7 @@ class SearchImagoDataTests(APITestCase):
         mock_search = MagicMock()
         mock_search.execute.return_value = [
             MagicMock(to_dict=lambda: {
-                "bildnummer": "93882934",
+                "bildnummer": "0093882934",
                 "datum": "2018-01-01T00:00:00.000Z",
                 "suchtext": "Happiness girl in jump,model released, Symbolfoto ING_19071_09621",
                 "fotografen": "ingimage",
@@ -47,7 +47,7 @@ class SearchImagoDataTests(APITestCase):
                 "db": "stock"
             }),
             MagicMock(to_dict=lambda: {
-                "bildnummer": "12345678",
+                "bildnummer": "0012345678",
                 "datum": "2020-05-01T00:00:00.000Z",
                 "suchtext": "Another image description",
                 "fotografen": "another_photographer",

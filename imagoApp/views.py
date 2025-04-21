@@ -1,3 +1,5 @@
+import requests
+
 from rest_framework.decorators import api_view
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, Term, MatchAll
@@ -6,6 +8,15 @@ from rest_framework import status
 from .elasticsearch_utils import get_es_client
 from elasticsearch import Elasticsearch
 
+def check_image_url(url):
+    """Check if an image exists at the given URL."""
+    try:
+        response = requests.head(url, timeout=5)  # Use HEAD request to check existence
+        if response.status_code == 200:
+            return True
+    except requests.RequestException:
+        pass
+    return False
 
 @api_view(['GET'])
 def search_imago_data(request):
@@ -41,8 +52,28 @@ def search_imago_data(request):
             s = Search(index="imago", using=es_client).query(MatchAll())
             print("No query parameter provided. Fetching all documents.")
 
-        results = s.execute()
-        hits = [hit.to_dict() for hit in results]
+        results = s.execute()        
+        hits = []
+        for hit in results:
+            hit_dict = hit.to_dict()
+            # Construct the thumbnail URL
+            bildnummer = hit_dict.get("bildnummer", "")
+            bildnummer = str(bildnummer).zfill(10)
+            # Check the primary URL
+            primary_url = f"https://www.imago-images.de/bild/st/{bildnummer}/s.jpg"
+            if check_image_url(primary_url):
+                hit_dict["thumbnail_url"] = primary_url
+            else:
+                # Check the fallback URL
+                fallback_url = f"https://www.imago-images.de/bild/sp/{bildnummer}/s.jpg"
+                if check_image_url(fallback_url):
+                    hit_dict["thumbnail_url"] = fallback_url
+                else:
+                    # If neither URL works, set an empty string
+                    hit_dict["thumbnail_url"] = ""
+
+            hits.append(hit_dict)
+
         return Response(hits)
     except Exception as e:
         import traceback
