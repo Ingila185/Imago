@@ -26,9 +26,10 @@ SECRET_KEY = 'django-insecure-1+f+_aqe=_t9^da3!vobscrj=fp18@#@w)hzc$50y08v5=$4l7
 DEBUG = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
-    'DEFAULT_PARSER_CLASSES': ('rest_framework.parsers.JSONParser',),
-}
+     'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',  # JSON response
+        'rest_framework.renderers.BrowsableAPIRenderer',  # Browsable API
+    ],}
 
 ALLOWED_HOSTS = []
 ELASTICSEARCH_HOST = '5.75.227.63'
@@ -48,12 +49,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'imagoApp'
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Example: React frontend
+    "http://127.0.0.1:3000",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
