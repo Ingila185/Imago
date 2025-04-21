@@ -1,4 +1,6 @@
 from rest_framework.test import APITestCase
+import unittest
+
 from unittest.mock import patch, MagicMock
 from django.urls import reverse
 
@@ -78,3 +80,53 @@ class SearchImagoDataTests(APITestCase):
 
         # Assert the response
         self.assertEqual(response.status_code, 500)
+
+class TestCheckImageUrl(unittest.TestCase):
+
+    @patch('imagoApp.views.requests.head')
+    def test_image_exists(self, mock_head):
+        """Test when the image exists (status code 200)."""
+        # Mock the response to return status code 200
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_head.return_value = mock_response
+
+        url = "https://www.imago-images.de/bild/st/0258999098/s.jpg"
+        result = check_image_url(url)
+        self.assertTrue(result)
+        mock_head.assert_called_once_with(url, timeout=5)
+
+    @patch('imagoApp.views.requests.head')
+    def test_image_not_found(self, mock_head):
+        """Test when the image does not exist (status code 404)."""
+        # Mock the response to return status code 404
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_head.return_value = mock_response
+
+        url = "https://www.imago-images.de/bild/st/1234567890/s.jpg"
+        result = check_image_url(url)
+        self.assertFalse(result)
+        mock_head.assert_called_once_with(url, timeout=5)
+
+    @patch('imagoApp.views.requests.head')
+    def test_request_exception(self, mock_head):
+        """Test when a RequestException is raised."""
+        # Mock the requests.head to raise a RequestException
+        mock_head.side_effect = Exception("Request failed")
+
+        url = "https://www.imago-images.de/bild/st/1234567890/s.jpg"
+        result = check_image_url(url)
+        self.assertFalse(result)
+        mock_head.assert_called_once_with(url, timeout=5)
+
+    @patch('imagoApp.views.requests.head')
+    def test_timeout(self, mock_head):
+        """Test when the request times out."""
+        # Mock the requests.head to raise a timeout exception
+        mock_head.side_effect = requests.exceptions.Timeout
+
+        url = "https://www.imago-images.de/bild/st/1234567890/s.jpg"
+        result = check_image_url(url)
+        self.assertFalse(result)
+        mock_head.assert_called_once_with(url, timeout=5)
