@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .elasticsearch_utils import get_es_client
 from elasticsearch import Elasticsearch
-
+from django.core.paginator import Paginator, EmptyPage
 def check_image_url(url):
     """Check if an image exists at the given URL."""
     try:
@@ -21,7 +21,10 @@ def check_image_url(url):
 @api_view(['GET'])
 def search_imago_data(request):
     es_client = get_es_client()
-    query_param = request.query_params.get('q', None)
+    query_param = request.query_params.get('q', None) 
+    page = request.query_params.get('page', 1)  # Default to page 1
+    page_size = request.query_params.get('page_size', 10)  # Default page size
+
 
     try:
         if query_param:
@@ -73,6 +76,21 @@ def search_imago_data(request):
                     hit_dict["thumbnail_url"] = ""
 
             hits.append(hit_dict)
+              # Apply pagination
+        paginator = Paginator(hits, page_size)
+        try:
+            paginated_hits = paginator.page(page)
+        except EmptyPage:
+            return Response({"results": [], "message": "Page out of range"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Return paginated results
+        return Response({
+            "results": list(paginated_hits),
+            "page": int(page),
+            "page_size": int(page_size),
+            "total_pages": paginator.num_pages,
+            "total_results": paginator.count,
+        })
 
         return Response(hits)
     except Exception as e:
